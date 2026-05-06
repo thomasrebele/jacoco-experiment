@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>jacoco-experiment</groupId>
+  <artifactId>jacoco-experiment</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <!--
+      Both properties need to be defined, otherwise the JVM prints an error message
+      and can only be stopped with kill -9 $jvm_pid:
+        - Error: could not open `{argLine}'
+        - Error: could not open `{jacoco.agent.argLine}'
+      -->
+    <argLine>-Dfoo1=bar</argLine>
+    <!--<jacoco.agent.argLine>-Dfoo2=bar</jacoco.agent.argLine>-->
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.14.4</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.15.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.14</version>
+        <executions>
+          <!-- for the experiment we check what happens if jacoco does not populate the argLine -->
+          <!--
+          <execution>
+            <id>default-prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+            <configuration>
+              <destFile>
+              ${project.build.directory}/jacoco.exec</destFile>
+              <propertyName>jacoco.agent.argLine</propertyName>
+            </configuration>
+          </execution>
+          -->
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>post-unit-test</id>
+            <goals>
+              <goal>report</goal>
+            </goals>
+            <configuration>
+              <dataFile>target/jacoco.exec</dataFile>
+              <outputDirectory>target/jacoco-out</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.5</version>
+        <configuration>
+          <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory" />
+          <argLine>@{argLine} -Djava.security.manager=allow
+          @{jacoco.agent.argLine}</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
